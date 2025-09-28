@@ -1,36 +1,48 @@
+/**
+ * MoodyJournal - Styles CSS
+ * 
+ * Styles de base pour l'identité visuelle du site
+ * Couleurs : Vert menthe (#b2c88e) et beige (#725e5e)
+ * 
+ * @author MoodyJournal Team
+ * @version 1.0.0
+ */
+
+/* === STYLES DE BASE === */
 html {
-    background-color:rgb(178, 200, 142);
+    background-color: rgb(178, 200, 142); /* Vert menthe */
     padding: 1%;
     margin: 1%;
-    font-family: Bahnschrift,'Times New Roman', Times, serif;
+    font-family: Bahnschrift, 'Times New Roman', Times, serif;
 }
 
+/* === HEADER === */
 header {
     padding: 2%;
-    background-color: rgb(114, 94, 94);
+    background-color: rgb(114, 94, 94); /* Beige */
     border-radius: 20px;
-    display:flex;
-    flex:1;
+    display: flex;
+    flex: 1;
 }
 
-
 header div {
-    display:flex;
-    flex:1;
+    display: flex;
+    flex: 1;
     align-items: center;
-    justify-content: center;}
+    justify-content: center;
+}
 
 #menu {
     font-size: 100%;
-    flex:1;
+    flex: 1;
     margin-left: auto;
     align-content: center;
-    align-self:center;
+    align-self: center;
     max-width: 50%;
 }
 
 #head-section {
-    display:flex;
+    display: flex;
     justify-content: center;
 }
 
@@ -38,9 +50,10 @@ header div {
     text-align: center;
     list-style-type: none;
     font-size: 130%;
-    flex:1;
+    flex: 1;
 }
 
+/* === CONTENU PRINCIPAL === */
 main {
     background-color: grey;
     border-radius: 20px;
@@ -57,4 +70,16 @@ main {
     justify-content: space-around;
     padding: 5%;
     font-size: 120%;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    #page_links {
+        flex-direction: column;
+    }
+    
+    #page_links a {
+        margin: 5px;
+        padding: 15px;
+    }
 }

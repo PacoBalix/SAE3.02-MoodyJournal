@@ -1,77 +1,110 @@
+/**
+ * MoodyJournal - Serveur Express.js
+ * 
+ * Application de journal personnel avec blog intégré
+ * Fonctionnalités :
+ * - Gestion des entrées de journal (CRUD)
+ * - Blog avec articles markdown
+ * - Interface utilisateur moderne
+ * 
+ * @author MoodyJournal Team
+ * @version 1.0.0
+ */
+
+// === IMPORTS ===
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
 const marked = require('marked');
 const handlebars = require('handlebars');
 
+// === CONFIGURATION ===
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Cache pour optimiser les performances (chargement paresseux)
+// Cache pour optimiser les performances du blog
 let articlesCache = null;
 let templateCache = null;
 let lastCacheUpdate = 0;
-const CACHE_DURATION = 300000; // 5 minutes (plus long car c'est une sous-fonctionnalité)
+const CACHE_DURATION = 300000; // 5 minutes
 
-// === Middleware ===
-
-// Servir les assets (mais PAS les fichiers HTML du blog)
-app.use('/assets', express.static('assets')); // Servir les assets
-
-// Définition du chemin du fichier journal.json
+// Chemin du fichier de données
 const DATA_FILE = path.join(__dirname, 'data', 'journal.json');
-app.use(express.json()); // pour parser le JSON
 
+// === MIDDLEWARE ===
+app.use(express.json()); // Parser JSON pour les requêtes POST
+app.use('/assets', express.static('assets')); // Servir les assets statiques
+
+/**
+ * Crée le dossier data s'il n'existe pas
+ */
 const ensureDir = async () => {
-  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
 };
 
-// Fonction de sauvegarde du journal (utilisé par journal.html)
+// === ROUTES API ===
+
+/**
+ * POST /api/save-journal
+ * Sauvegarde une nouvelle entrée de journal
+ */
 app.post('/api/save-journal', async (req, res) => {
-  try {
-    const newEntry = req.body;
-    newEntry.savedAt = new Date().toISOString();
-
-    await ensureDir();
-    let data = [];
     try {
-      const fileContent = await fs.readFile(DATA_FILE, 'utf-8');
-      if (fileContent.trim()) {
-        data = JSON.parse(fileContent);
-      }
+        const newEntry = req.body;
+        newEntry.savedAt = new Date().toISOString();
+
+        await ensureDir();
+        
+        // Charger les données existantes
+        let data = [];
+        try {
+            const fileContent = await fs.readFile(DATA_FILE, 'utf-8');
+            if (fileContent.trim()) {
+                data = JSON.parse(fileContent);
+            }
+        } catch (err) {
+            console.warn('Fichier journal.json inexistant, création d\'un nouveau.');
+        }
+
+        // Ajouter la nouvelle entrée
+        data.push(newEntry);
+        await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+
+        console.log('✅ Journal sauvegardé');
+        res.status(200).send('Journal saved');
     } catch (err) {
-      console.warn('Fichier inexistant ou corrompu, création d\'un nouveau.');
+        console.error('Erreur lors de la sauvegarde:', err);
+        res.status(500).send('Erreur serveur');
     }
-
-    data.push(newEntry);
-    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-
-    console.log('✅ Journal sauvegardé');
-    res.status(200).send('Journal saved');
-  } catch (err) {
-    console.error('Erreur :', err);
-    res.status(500).send('Erreur serveur');
-  }
 });
 
-// Route pour récupérer les entrées du journal (utilisé par view.html)
+/**
+ * GET /api/journal-entries
+ * Récupère toutes les entrées du journal
+ */
 app.get('/api/journal-entries', async (req, res) => {
-  try {
-    const data = await fs.readFile(path.join(__dirname, 'data', 'journal.json'), 'utf-8');
-    const entries = JSON.parse(data);
-    res.json(entries);
-  } catch (err) {
-    console.error('Erreur lors de la lecture du fichier journal.json:', err);
-    res.status(500).json({ error: 'Impossible de charger les entrées du journal.' });
-  }
+    try {
+        const data = await fs.readFile(DATA_FILE, 'utf-8');
+        const entries = JSON.parse(data);
+        res.json(entries);
+    } catch (err) {
+        console.error('Erreur lors de la lecture du journal:', err);
+        res.status(500).json({ error: 'Impossible de charger les entrées du journal.' });
+    }
 });
 
-// Fonction pour lire et parser les métadonnées des fichiers markdown
+// === FONCTIONS BLOG ===
+
+/**
+ * Parse un fichier markdown et extrait les métadonnées
+ * @param {string} filePath - Chemin vers le fichier markdown
+ * @returns {Object|null} - Objet avec métadonnées et contenu HTML
+ */
 async function parseMarkdownFile(filePath) {
     try {
         const content = await fs.readFile(filePath, 'utf-8');
         
-        // Extraction des métadonnées (front matter)
+        // Extraction des métadonnées (front matter YAML)
         const metaRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
         const match = content.match(metaRegex);
         
@@ -79,7 +112,7 @@ async function parseMarkdownFile(filePath) {
         let markdownContent = content;
         
         if (match) {
-            // Parsing simple des métadonnées YAML-like
+            // Parsing des métadonnées YAML-like
             const metaLines = match[1].split('\n');
             metaLines.forEach(line => {
                 const trimmedLine = line.trim();
@@ -98,45 +131,39 @@ async function parseMarkdownFile(filePath) {
         // Conversion markdown vers HTML
         const htmlContent = marked.parse(markdownContent);
         
-        // Génération d'un extrait (enlever les métadonnées et le markdown)
+        // Génération d'un extrait propre
         const cleanText = markdownContent
-            .replace(/^#+\s*/gm, '') // Enlever les titres markdown
-            .replace(/[*`\[\]]/g, '') // Enlever les caractères markdown
-            .replace(/\n+/g, ' ') // Remplacer les retours à la ligne par des espaces
+            .replace(/^#+\s*/gm, '') // Supprimer les titres markdown
+            .replace(/[*`\[\]]/g, '') // Supprimer les caractères markdown
+            .replace(/\n+/g, ' ') // Remplacer les retours à la ligne
             .trim();
         const excerpt = cleanText.length > 200 ? cleanText.substring(0, 200) + '...' : cleanText;
         
-        // Calcul du temps de lecture (approximatif)
+        // Calcul du temps de lecture (200 mots/minute)
         const wordCount = markdownContent.split(/\s+/).length;
-        const readTime = Math.ceil(wordCount / 200); // 200 mots par minute
+        const readTime = Math.ceil(wordCount / 200);
         
-        const result = {
+        return {
             ...metadata,
             content: htmlContent,
             excerpt,
             readTime,
             slug: path.basename(filePath, '.md')
         };
-        
-        // Debug: afficher les métadonnées extraites (commenté pour la production)
-        // console.log(`Article ${result.slug}:`, {
-        //     title: result.title,
-        //     date: result.date,
-        //     metadata: metadata
-        // });
-        
-        return result;
     } catch (error) {
         console.error(`Erreur lors de la lecture du fichier ${filePath}:`, error);
         return null;
     }
 }
 
-// Fonction pour obtenir tous les articles (avec cache paresseux)
+/**
+ * Récupère tous les articles du blog avec cache
+ * @returns {Array} - Liste des articles triés par date
+ */
 async function getAllArticles() {
     const now = Date.now();
     
-    // Retourner le cache si il est encore valide
+    // Retourner le cache si valide
     if (articlesCache && (now - lastCacheUpdate) < CACHE_DURATION) {
         return articlesCache;
     }
@@ -155,24 +182,20 @@ async function getAllArticles() {
             }
         }
         
-        // Tri par date (plus récent en premier) - avec gestion des dates manquantes
+        // Tri par date (plus récent en premier)
         articles.sort((a, b) => {
             const dateA = a.date ? new Date(a.date) : new Date(0);
             const dateB = b.date ? new Date(b.date) : new Date(0);
             return dateB - dateA;
         });
         
-        // Ajouter des valeurs par défaut pour les articles sans métadonnées
+        // Valeurs par défaut pour les articles sans métadonnées
         articles.forEach(article => {
-            if (!article.title) {
-                article.title = 'Article sans titre';
-            }
-            if (!article.date) {
-                article.date = 'Date non spécifiée';
-            }
+            if (!article.title) article.title = 'Article sans titre';
+            if (!article.date) article.date = 'Date non spécifiée';
         });
         
-        // Mettre en cache
+        // Mise en cache
         articlesCache = articles;
         lastCacheUpdate = now;
         
@@ -183,7 +206,10 @@ async function getAllArticles() {
     }
 }
 
-// Fonction pour initialiser le template (chargement paresseux)
+/**
+ * Compile le template Handlebars avec cache
+ * @returns {Function} - Fonction de compilation Handlebars
+ */
 async function getTemplate() {
     if (!templateCache) {
         const template = await fs.readFile(path.join(__dirname, 'public', 'blog.html'), 'utf-8');
@@ -192,10 +218,14 @@ async function getTemplate() {
     return templateCache;
 }
 
-// Route pour la page d'index du blog (chargement paresseux)
+// === ROUTES BLOG ===
+
+/**
+ * GET /blog
+ * Page d'index du blog
+ */
 app.get('/blog', async (req, res) => {
     try {
-        // Charger les données seulement quand la page est demandée
         const articles = await getAllArticles();
         const compiledTemplate = await getTemplate();
         
@@ -211,7 +241,10 @@ app.get('/blog', async (req, res) => {
     }
 });
 
-// Route pour un article individuel (chargement paresseux)
+/**
+ * GET /blog/:slug
+ * Page d'un article individuel
+ */
 app.get('/blog/:slug', async (req, res) => {
     try {
         const slug = req.params.slug;
@@ -224,7 +257,7 @@ app.get('/blog/:slug', async (req, res) => {
         
         const compiledTemplate = await getTemplate();
         
-        // Trouver l'article précédent et suivant
+        // Navigation entre articles
         const currentIndex = articles.findIndex(a => a.slug === slug);
         const prevArticle = currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null;
         const nextArticle = currentIndex > 0 ? articles[currentIndex - 1] : null;
@@ -246,27 +279,42 @@ app.get('/blog/:slug', async (req, res) => {
     }
 });
 
-// Routes pour les pages HTML (AVANT le middleware statique)
+// === ROUTES PAGES ===
+
+/**
+ * GET /
+ * Page d'accueil
+ */
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+/**
+ * GET /journal
+ * Page d'écriture du journal
+ */
 app.get('/journal', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'journal.html'));
 });
 
+/**
+ * GET /view
+ * Page de visualisation des données
+ */
 app.get('/view', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'view.html'));
 });
 
-// Middleware statique pour les assets (CSS, JS, images) - APRÈS les routes HTML
+// === MIDDLEWARE STATIQUE ===
+// Servir les fichiers statiques (CSS, JS, images) APRÈS les routes personnalisées
 app.use(express.static(path.join(__dirname, 'public'), {
     index: false // Ne pas servir index.html automatiquement
 }));
 
-// === Démarrage du serveur ===
+// === DÉMARRAGE DU SERVEUR ===
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur en cours sur http://localhost:${PORT}`);
-  console.log(`📂 Assure-toi que les pages HTML soit dans /public`);
-  console.log(`📝 Blog disponible sur http://localhost:${PORT}/blog`);
+    console.log(`🚀 Serveur MoodyJournal démarré sur http://localhost:${PORT}`);
+    console.log(`📂 Pages disponibles : /, /journal, /view, /blog`);
+    console.log(`📝 Blog avec articles markdown : /blog`);
+    console.log(`🔧 API : /api/save-journal, /api/journal-entries`);
 });
