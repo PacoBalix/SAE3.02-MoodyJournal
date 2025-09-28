@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Affichage Journal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-radial min-h-screen p-6">
+  <h1 class="text-4xl font-bold text-emerald-800 mb-6 text-center">Mes Entrées de Journal</h1>
+
+  <div class="max-w-3xl mx-auto bg-white/90 rounded-xl p-6 shadow-lg">
+    <div class="flex justify-between mb-4">
+      <button id="prevBtn" class="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-600">Précédent</button>
+      <input type="date" id="datePicker" class="border rounded px-3 py-2" />
+      <button id="nextBtn" class="px-4 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-600">Suivant</button>
+    </div>
+    <div id="entryDisplay" class="space-y-4">
+      <!-- Contenu des entrées affiché ici -->
+    </div>
+    <div class="mt-6 text-center">
+      <a href="index.html" class="text-emerald-700 hover:underline">Retour à l'accueil</a>
+    </div>
+  </div>
+
+  <script>
+    let entries = [];
+    let currentIndex = 0;
+
+    // Convertit la date ISO string en format affichable (ex : 26 septembre 2025)
+    function formatDate(dateStr) {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateStr).toLocaleDateString('fr-FR', options);
+    }
+
+    // Affiche une entrée donnée dans #entryDisplay
+    function displayEntry(entry) {
+      if (!entry) {
+        document.getElementById('entryDisplay').innerHTML = '<p class="text-center text-gray-500">Aucune entrée pour cette date</p>';
+        return;
+      }
+      document.getElementById('entryDisplay').innerHTML = `
+        <h2 class="text-xl font-semibold">${formatDate(entry.date)}</h2>
+        <p><strong>Jour :</strong> ${entry.day}</p>
+        <p><strong>Humeur :</strong> ${entry.mood} / 10</p>
+        <p><strong>Mots qui décrivent :</strong> ${entry.feelingWords.join(', ')}</p>
+        <p><strong>Gratitude :</strong> ${entry.gratitude.join(', ')}</p>
+        <p><strong>Meilleur moment :</strong> ${entry.bestMoment}</p>
+        <p><strong>Sommeil :</strong> ${entry.sleep} heures</p>
+        <p><strong>Exercice :</strong> ${entry.exercise}</p>
+        <p><strong>Nutrition :</strong> ${entry.nutrition}</p>
+        <p><strong>Habitudes productives :</strong> ${entry.productiveHabits}</p>
+        <p><strong>Habitudes à améliorer :</strong> ${entry.slippedHabits}</p>
+        <p><strong>Challenges :</strong> ${entry.challenges}</p>
+        <p><strong>Réaction :</strong> ${entry.reaction}</p>
+        <p><strong>Approche différente :</strong> ${entry.differentApproach}</p>
+        <p><strong>Patterns :</strong> ${entry.patterns}</p>
+        <p><strong>Leçons :</strong> ${entry.lessons}</p>
+        <p><strong>Ce qui donne de l'énergie :</strong> ${entry.energyGivers}</p>
+        <p><strong>Ce qui fatigue :</strong> ${entry.energyDrainers}</p>
+        <p><strong>Amélioration souhaitée :</strong> ${entry.improvement}</p>
+        <p><strong>Affirmation :</strong> ${entry.affirmation}</p>
+        <p><strong>Notes extra :</strong> ${entry.extraNotes}</p>
+      `;
+    }
+
+    // Charge les données depuis le serveur
+    async function loadEntries() {
+      try {
+        const res = await fetch('/api/journal-entries');
+        if (!res.ok) throw new Error('Erreur lors du chargement des entrées.');
+        entries = await res.json();
+        entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+        currentIndex = entries.length - 1; // Commencer par la dernière entrée
+        displayEntry(entries[currentIndex]);
+        document.getElementById('datePicker').value = entries[currentIndex].date;
+      } catch (e) {
+        document.getElementById('entryDisplay').innerHTML = `<p class="text-red-600 text-center">${e.message}</p>`;
+      }
+    }
+
+    // Gestion des boutons et datePicker
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        displayEntry(entries[currentIndex]);
+        document.getElementById('datePicker').value = entries[currentIndex].date;
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (currentIndex < entries.length - 1) {
+        currentIndex++;
+        displayEntry(entries[currentIndex]);
+        document.getElementById('datePicker').value = entries[currentIndex].date;
+      }
+    });
+
+    document.getElementById('datePicker').addEventListener('change', (e) => {
+      const selectedDate = e.target.value;
+      const index = entries.findIndex(entry => entry.date === selectedDate);
+      if (index !== -1) {
+        currentIndex = index;
+        displayEntry(entries[currentIndex]);
+      } else {
+        document.getElementById('entryDisplay').innerHTML = '<p class="text-center text-gray-500">Aucune entrée pour cette date</p>';
+      }
+    });
+
+    // Initialisation
+    loadEntries();
+  </script>
+</body>
+</html>

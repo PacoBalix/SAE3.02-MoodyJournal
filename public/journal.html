@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindful Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r148/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.topology.min.js"></script>
+    <style>
+        .bg-gradient-radial {
+            background: radial-gradient(circle at center, #f0fdf4 0%, #ecfdf5 50%, #e0f2fe 100%);
+        }
+
+        .day-selector input[type="radio"] {
+            display: none;
+        }
+
+        .day-selector label {
+            transition: all 0.3s ease;
+        }
+
+        /* Ajout d'un effet d'aura pour le jour sélectionné */
+        .day-selector label:has(input[type="radio"]:checked) {
+            transform: scale(1.06);
+            box-shadow: 0 0 1px 3px rgba(192, 204, 222, 0.5);
+        }
+
+        .mood-selector input[type="radio"] {
+            display: none;
+        }
+
+        .mood-selector label {
+            transition: all 0.3s ease;
+        }
+
+        .mood-selector input[type="radio"]:checked+label {
+            transform: scale(1.1);
+            box-shadow: 0 0 1px 3px rgba(59, 130, 246, 0.5);
+        }
+
+        .section-card {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        #snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+        }
+
+        #snackbar.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            /* Fixe dans la fenêtre */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            /* Placé derrière tout le contenu */
+        }
+
+        @-webkit-keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-radial">
+    <div id="vanta-bg" class="fixed inset-0 z-0" style="width: 100%; height: 100vh;"></div>
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <header class="text-center mb-12" data-aos="fade-down">
+            <h1 class="text-4xl md:text-5xl font-bold text-emerald-800 mb-4">🌱 Mindful Journal</h1>
+            <p class="text-lg text-emerald-600">Capture your thoughts, reflect, and grow</p>
+        </header>
+
+        <div class="max-w-4xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
+            <!-- Date Section -->
+            <div class="p-6 border-b border-gray-100" data-aos="fade-right">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div class="mb-4 md:mb-0">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" id="journal-date"
+                            class="w-full md:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Day of the week</label>
+                        <div class="flex flex-wrap gap-2 day-selector">
+                            <label class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">
+                                <input type="radio" name="day" value="Monday" class="hidden">
+                                <span>Monday</span>
+                            </label>
+                            <label    
+                            class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">
+                                <input type="radio" name="day" value="Tuesday" class="hidden">
+                                <span>Tuesday</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">
+                                <input type="radio" name="day" value="Wednesday" class="hidden">
+                                <span>Wednesday</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">
+                                <input type="radio" name="day" value="Thursday" class="hidden">
+                                <span>Thursday</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">
+                                <input type="radio" name="day" value="Friday" class="hidden">
+                                <span>Friday</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer">                                <input type="radio" name="day" value="Saturday" class="hidden">
+                                <span>Saturday</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full cursor-pointer day-selector">
+                                <input type="radio" name="day" value="Sunday" class="hidden">
+                                <span>Sunday</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood Check-in Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="smile" class="mr-2"></i> Mood Check-in
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current mood (1–10)</label>
+                        <div class="mood-selector flex justify-between">
+                            <input type="radio" id="mood-1" name="mood" value="1" class="hidden">
+                            <label for="mood-1"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-800 cursor-pointer">1</label>
+                            <input type="radio" id="mood-2" name="mood" value="2" class="hidden">
+                            <label for="mood-2"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-red-200 text-red-800 cursor-pointer">2</label>
+                            <input type="radio" id="mood-3" name="mood" value="3" class="hidden">
+                            <label for="mood-3"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-200 text-orange-800 cursor-pointer">3</label>
+                            <input type="radio" id="mood-4" name="mood" value="4" class="hidden">
+                            <label for="mood-4"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-200 text-orange-800 cursor-pointer">4</label>
+                            <input type="radio" id="mood-5" name="mood" value="5" class="hidden">
+                            <label for="mood-5"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-200 text-yellow-800 cursor-pointer">5</label>
+                            <input type="radio" id="mood-6" name="mood" value="6" class="hidden">
+                            <label for="mood-6"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-200 text-yellow-800 cursor-pointer">6</label>
+                            <input type="radio" id="mood-7" name="mood" value="7" class="hidden">
+                            <label for="mood-7"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-green-200 text-green-800 cursor-pointer">7</label>
+                            <input type="radio" id="mood-8" name="mood" value="8" class="hidden">
+                            <label for="mood-8"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-green-200 text-green-800 cursor-pointer">8</label>
+                            <input type="radio" id="mood-9" name="mood" value="9" class="hidden">
+                            <label for="mood-9"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-green-300 text-green-900 cursor-pointer">9</label>
+                            <input type="radio" id="mood-10" name="mood" value="10" class="hidden">
+                            <label for="mood-10"
+                                class="w-8 h-8 flex items-center justify-center rounded-full bg-green-400 text-green-900 cursor-pointer">10</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">3 words to describe how I
+                            feel</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text"
+                                class="mood-checkin w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Word 1">
+                            <input type="text"
+                                class="mood-checkin w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Word 2">
+                            <input type="text"
+                                class="mood-checkin w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Word 3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gratitude Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="sun" class="mr-2"></i> Gratitude & Positives
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Today, I'm grateful for:</label>
+                        <div class="space-y-2">
+                            <input type="text"
+                                class="gratitude-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="1.">
+                            <input type="text"
+                                class="gratitude-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="2.">
+                            <input type="text"
+                                class="gratitude-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="3.">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Best moment / highlight of the
+                            day</label>
+                        <textarea id="bestmoment"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2" placeholder="Describe your best moment..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habits Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="activity" class="mr-2"></i> Habits & Actions
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sleep (hours)</label>
+                        <input type="number" id="sleep" min="0" max="24"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Exercise / movement</label>
+                        <input type="text" id="exercice"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            placeholder="What did you do?">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nutrition</label>
+                        <div class="flex gap-3">
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full cursor-pointer">
+                                <input type="radio" name="nutrition" value="Good" class="hidden">
+                                <span>🍎 Good</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full cursor-pointer">
+                                <input type="radio" name="nutrition" value="Average" class="hidden">
+                                <span>⚡ Average</span>
+                            </label>
+                            <label
+                                class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full cursor-pointer">
+                                <input type="radio" name="nutrition" value="Poor" class="hidden">
+                                <span>💤 Poor</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Productive habits I followed
+                            today</label>
+                        <textarea id="good-habits"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2" placeholder="What went well?"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Habits I slipped on</label>
+                        <textarea id="bad-habits"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2" placeholder="What could be improved?"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Challenges Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="alert-triangle" class="mr-2"></i> Challenges & Problems
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What challenged me today?</label>
+                        <textarea id="challenges"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">How did I react?</label>
+                        <textarea id="reaction"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What could I try differently next
+                            time?</label>
+                        <textarea id="approach"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reflections Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="eye" class="mr-2"></i> Reflections & Lessons
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Did I notice any patterns in my
+                            thoughts/behaviors?</label>
+                        <textarea id="patterns"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What did I learn about myself
+                            today?</label>
+                        <textarea id="lessons"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What gave me energy?</label>
+                        <textarea id="energyGivers"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What drained my energy?</label>
+                        <textarea id="energyDrainers"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps Section -->
+            <div class="p-6 border-b border-gray-100 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="target" class="mr-2"></i> Next Step / Tomorrow's Intention
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">One thing I want to improve
+                            tomorrow</label>
+                        <input type="text" id="improve"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">A reminder or affirmation for
+                            myself</label>
+                        <textarea id="affirmation"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            rows="2" placeholder="Write your affirmation here..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra Notes Section -->
+            <div class="p-6 section-card" data-aos="fade-up">
+                <h2 class="text-xl font-semibold text-emerald-700 mb-4 flex items-center">
+                    <i data-feather="edit-3" class="mr-2"></i> Extra Notes
+                </h2>
+                <textarea id="extra-notes"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    rows="5" placeholder="Free writing space for anything on your mind..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="p-6 bg-gray-50 rounded-b-2xl flex justify-end" data-aos="fade-up">
+                <button id="save-journal"
+                    class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-md transition duration-300 flex items-center">
+                    <i data-feather="save" class="mr-2"></i> Save Journal Entry
+                </button>
+            </div>
+        </div>
+
+        <div id="snackbar"
+            class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-md transition duration-300 flex items-center">
+            Journal entry saved successfully!</div>
+
+        <footer class="mt-12 text-center text-gray-600 text-sm" data-aos="fade-up">
+            <p>Your mindful journey starts here. Reflect daily for personal growth.</p>
+        </footer>
+    </div>
+</body>
+<script src="./journal.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    VANTA.TOPOLOGY({
+      el: "#vanta-bg",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.0,
+      minWidth: 200.0,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      color:  0x85a53b,
+      backgroundColor: 0xffffff,
+    });
+  });
+</script>
+</html>

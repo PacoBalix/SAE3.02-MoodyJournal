@@ -1,0 +1,60 @@
+html {
+    background-color:rgb(178, 200, 142);
+    padding: 1%;
+    margin: 1%;
+    font-family: Bahnschrift,'Times New Roman', Times, serif;
+}
+
+header {
+    padding: 2%;
+    background-color: rgb(114, 94, 94);
+    border-radius: 20px;
+    display:flex;
+    flex:1;
+}
+
+
+header div {
+    display:flex;
+    flex:1;
+    align-items: center;
+    justify-content: center;}
+
+#menu {
+    font-size: 100%;
+    flex:1;
+    margin-left: auto;
+    align-content: center;
+    align-self:center;
+    max-width: 50%;
+}
+
+#head-section {
+    display:flex;
+    justify-content: center;
+}
+
+.head-subsection {
+    text-align: center;
+    list-style-type: none;
+    font-size: 130%;
+    flex:1;
+}
+
+main {
+    background-color: grey;
+    border-radius: 20px;
+}
+
+#welcome {
+    text-align: center;
+    padding: 3%;
+    font-size: 150%;
+}
+
+#page_links {
+    display: flex;
+    justify-content: space-around;
+    padding: 5%;
+    font-size: 120%;
+}

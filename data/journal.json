@@ -1,0 +1,128 @@
+[
+  {
+    "day": "Friday",
+    "mood": "7",
+    "date": "2025-09-26",
+    "feelingWords": [
+      "Determined",
+      "Revitalized",
+      "Courageus"
+    ],
+    "gratitude": [
+      "Node.js",
+      "HTML,CSS,JS",
+      "My teamates"
+    ],
+    "bestMoment": "",
+    "sleep": "",
+    "exercise": "",
+    "productiveHabits": "",
+    "slippedHabits": "",
+    "challenges": "",
+    "reaction": "",
+    "differentApproach": "",
+    "patterns": "",
+    "lessons": "",
+    "energyGivers": "",
+    "energyDrainers": "",
+    "improvement": "",
+    "affirmation": "",
+    "extraNotes": "This is a test entry to see if the journal works.",
+    "savedAt": "2025-09-26T12:11:31.790Z"
+  },
+  {
+    "date": "2025-09-26",
+    "day": "Friday",
+    "mood": "8",
+    "feelingWords": [
+      "Petit",
+      "Mot",
+      "Doux"
+    ],
+    "gratitude": [
+      "Being a junior developper",
+      "Having AI agents to helps me learn and code",
+      "Ditching Math and Physic class"
+    ],
+    "bestMoment": "Working on this project with my colleagues",
+    "sleep": "7",
+    "exercise": "Sport",
+    "nutrition": "Good",
+    "productiveHabits": "Working on myself, reading, doing sports, learning.",
+    "slippedHabits": "la fleeemmmmeee",
+    "challenges": "la fleeemme",
+    "reaction": "la flemme",
+    "differentApproach": "la flemme",
+    "patterns": "la lfeeeme",
+    "lessons": "la",
+    "energyGivers": "fleemme",
+    "energyDrainers": "nan vrmt",
+    "improvement": "c",
+    "affirmation": "bon?",
+    "extraNotes": "oui c finis :)",
+    "savedAt": "2025-09-26T12:23:08.591Z"
+  },
+  {
+    "date": "2025-09-27",
+    "day": "Monday",
+    "mood": "2",
+    "feelingWords": [
+      "Fatigué",
+      "Avachi",
+      "Distrait"
+    ],
+    "gratitude": [
+      "Ma famille qui est là pour moi",
+      "Les librairies Internet qui documente la façon dont on peux créer une page web",
+      "Les repas chaud que j'ai pu mangé aujourd'hui"
+    ],
+    "bestMoment": "Quand je suis sortis promener mon chien",
+    "sleep": "10",
+    "exercise": "Course, pompe, traction",
+    "nutrition": "Average",
+    "productiveHabits": "Apprendre des nouvelles choses",
+    "slippedHabits": "Ruminer sur mon inaction ",
+    "challenges": "Avancer sur ce projet",
+    "reaction": "J'ai perseveré",
+    "differentApproach": "Être plus concentré sur ce que je fais",
+    "patterns": "",
+    "lessons": "",
+    "energyGivers": "",
+    "energyDrainers": "",
+    "improvement": "",
+    "affirmation": "",
+    "extraNotes": "",
+    "savedAt": "2025-09-27T21:40:31.264Z"
+  },
+  {
+    "date": "2025-09-28",
+    "day": "Thursday",
+    "mood": "5",
+    "feelingWords": [
+      "",
+      "",
+      ""
+    ],
+    "gratitude": [
+      "",
+      "",
+      ""
+    ],
+    "bestMoment": "",
+    "sleep": "",
+    "exercise": "",
+    "productiveHabits": "",
+    "slippedHabits": "",
+    "challenges": "",
+    "reaction": "",
+    "differentApproach": "",
+    "patterns": "",
+    "lessons": "",
+    "energyGivers": "",
+    "energyDrainers": "",
+    "improvement": "",
+    "affirmation": "",
+    "extraNotes": "",
+    "savedAt": "2025-09-28T07:06:02.888Z"
+  }
+]
