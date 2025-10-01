@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta.js Advanced Tester</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="p5.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow-x: hidden;
+            background: #000;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .effect-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .effect-selector select {
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .effect-selector select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .controls-panel {
+            position: fixed;
+            right: 0;
+            top: 80px;
+            bottom: 0;
+            width: 380px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            z-index: 999;
+            padding: 30px;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .controls-panel.hidden {
+            transform: translateX(100%);
+        }
+
+        .toggle-panel {
+            position: fixed;
+            right: 390px;
+            top: 100px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 6px 0 0 6px;
+            cursor: pointer;
+            z-index: 1000;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: none;
+            transition: right 0.3s ease;
+        }
+
+        .toggle-panel.panel-hidden {
+            right: 10px;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-item {
+            margin-bottom: 20px;
+        }
+
+        .control-item label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .control-item input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .control-item input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .control-item input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .control-item .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 50px;
+        }
+
+        .info-panel {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 999;
+        }
+
+        .info-panel h2 {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-output {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-output pre {
+            color: #fff;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+            display: none;
+            text-align: center;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .loading p {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .controls-panel {
+                width: 100%;
+                top: 70px;
+            }
+            
+            .toggle-panel {
+                right: 10px;
+                top: 80px;
+            }
+            
+            .info-panel {
+                left: 15px;
+                right: 15px;
+                bottom: 15px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="vanta-bg"></div>
+    
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Chargement de l'effet...</p>
+    </div>
+
+    <div class="header">
+        <h1>VANTA.JS</h1>
+        <div class="effect-selector">
+            <select id="effect-select">
+                <option value="birds">BIRDS</option>
+                <option value="fog">FOG</option>
+                <option value="waves" selected>WAVES</option>
+                <option value="clouds">CLOUDS</option>
+                <option value="net">NET</option>
+                <option value="cells">CELLS</option>
+                <option value="trunk">TRUNK</option>
+                <option value="topology">TOPOLOGY</option>
+                <option value="dots">DOTS</option>
+                <option value="rings">RINGS</option>
+                <option value="halo">HALO</option>
+                <option value="globe">GLOBE</option>
+            </select>
+            <button class="btn" onclick="copyConfig()">Copy Config</button>
+        </div>
+    </div>
+
+    <div class="toggle-panel" id="togglePanel" onclick="togglePanel()">
+        ⚙️
+    </div>
+
+    <div class="controls-panel" id="controlsPanel">
+        <div id="controls-content"></div>
+    </div>
+
+    <div class="info-panel">
+        <h2 id="effectTitle">WAVES</h2>
+        <p id="effectDescription">Animating an abstract water effect with three.js</p>
+        <div class="code-output">
+            <pre id="codeOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+        let currentEffect = null;
+        let currentScript = null;
+        let currentConfig = {};
+        let isPanelHidden = false;
+
+        const effectConfigs = {
+            birds: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.birds.min.js',
+                description: 'Flocking bird animation based on a simulation',
+                params: {
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    color1: { type: 'color', default: '#ff0066', label: 'Bird Color 1' },
+                    color2: { type: 'color', default: '#6600ff', label: 'Bird Color 2' },
+                    birdSize: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1.4, label: 'Bird Size' },
+                    speedLimit: { type: 'range', min: 1, max: 10, step: 0.5, default: 4, label: 'Speed Limit' },
+                    separation: { type: 'range', min: 10, max: 100, step: 5, default: 50, label: 'Separation' },
+                    alignment: { type: 'range', min: 10, max: 100, step: 5, default: 50, label: 'Alignment' },
+                    cohesion: { type: 'range', min: 10, max: 100, step: 5, default: 50, label: 'Cohesion' },
+                    quantity: { type: 'range', min: 1, max: 5, step: 1, default: 3, label: 'Quantity' }
+                }
+            },
+            fog: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.fog.min.js',
+                description: 'Fog shader effect with three.js',
+                params: {
+                    highlightColor: { type: 'color', default: '#ff3f81', label: 'Highlight Color' },
+                    midtoneColor: { type: 'color', default: '#ff1f51', label: 'Midtone Color' },
+                    lowlightColor: { type: 'color', default: '#2d1b5e', label: 'Lowlight Color' },
+                    baseColor: { type: 'color', default: '#23153c', label: 'Base Color' },
+                    blurFactor: { type: 'range', min: 0.1, max: 1, step: 0.05, default: 0.6, label: 'Blur Factor' },
+                    speed: { type: 'range', min: 0.1, max: 5, step: 0.1, default: 1, label: 'Speed' },
+                    zoom: { type: 'range', min: 0.1, max: 3, step: 0.1, default: 1, label: 'Zoom' }
+                }
+            },
+            waves: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.waves.min.js',
+                description: 'Animating an abstract water effect with three.js',
+                params: {
+                    color: { type: 'color', default: '#001122', label: 'Water Color' },
+                    shininess: { type: 'range', min: 0, max: 100, step: 5, default: 30, label: 'Shininess' },
+                    waveHeight: { type: 'range', min: 5, max: 40, step: 1, default: 15, label: 'Wave Height' },
+                    waveSpeed: { type: 'range', min: 0.1, max: 2, step: 0.1, default: 1, label: 'Wave Speed' },
+                    zoom: { type: 'range', min: 0.5, max: 2, step: 0.05, default: 0.75, label: 'Zoom' }
+                }
+            },
+            clouds: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.clouds.min.js',
+                description: 'Volumetric clouds with three.js',
+                params: {
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    skyColor: { type: 'color', default: '#68b8d7', label: 'Sky Color' },
+                    cloudColor: { type: 'color', default: '#adc1de', label: 'Cloud Color' },
+                    cloudShadowColor: { type: 'color', default: '#183550', label: 'Cloud Shadow Color' },
+                    sunColor: { type: 'color', default: '#ff9919', label: 'Sun Color' },
+                    sunGlareColor: { type: 'color', default: '#ff6633', label: 'Sun Glare Color' },
+                    speed: { type: 'range', min: 0.1, max: 3, step: 0.1, default: 1, label: 'Speed' }
+                }
+            },
+            net: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js',
+                description: 'Animated network/mesh with three.js',
+                params: {
+                    color: { type: 'color', default: '#ff3f81', label: 'Net Color' },
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    points: { type: 'range', min: 3, max: 20, step: 1, default: 10, label: 'Points' },
+                    maxDistance: { type: 'range', min: 10, max: 40, step: 1, default: 23, label: 'Max Distance' },
+                    spacing: { type: 'range', min: 10, max: 25, step: 1, default: 16, label: 'Spacing' },
+                    showDots: { type: 'checkbox', default: true, label: 'Show Dots' }
+                }
+            },
+            cells: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.cells.min.js',
+                description: 'Cell-like animation with three.js',
+                params: {
+                    color1: { type: 'color', default: '#ff006e', label: 'Cell Color 1' },
+                    color2: { type: 'color', default: '#8338ec', label: 'Cell Color 2' },
+                    size: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1.5, label: 'Cell Size' },
+                    speed: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1, label: 'Speed' },
+                    scale: { type: 'range', min: 0.5, max: 2, step: 0.1, default: 1, label: 'Scale' }
+                }
+            },
+            trunk: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.trunk.min.js',
+                description: 'Tree trunk growing animation',
+                params: {
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    color: { type: 'color', default: '#ff3f81', label: 'Trunk Color' },
+                    spacing: { type: 'range', min: 0, max: 10, step: 0.5, default: 0, label: 'Spacing' },
+                    chaos: { type: 'range', min: 0, max: 10, step: 0.5, default: 4, label: 'Chaos' }
+                }
+            },
+            topology: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.topology.min.js',
+                description: 'Animated topology map',
+                params: {
+                    color: { type: 'color', default: '#ff3f81', label: 'Line Color' },
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' }
+                }
+            },
+            dots: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.dots.min.js',
+                description: 'Animated dot pattern with three.js',
+                params: {
+                    color: { type: 'color', default: '#ff3f81', label: 'Dot Color' },
+                    color2: { type: 'color', default: '#00ffff', label: 'Dot Color 2' },
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    size: { type: 'range', min: 1, max: 10, step: 0.5, default: 3, label: 'Dot Size' },
+                    spacing: { type: 'range', min: 15, max: 50, step: 1, default: 30, label: 'Spacing' },
+                    showLines: { type: 'checkbox', default: true, label: 'Show Lines' }
+                }
+            },
+            rings: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.rings.min.js',
+                description: 'Animated concentric rings',
+                params: {
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' }
+                }
+            },
+            halo: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.halo.min.js',
+                description: 'Halo effect with shader',
+                params: {
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    baseColor: { type: 'color', default: '#ff006e', label: 'Base Color' },
+                    size: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1.5, label: 'Size' },
+                    amplitudeFactor: { type: 'range', min: 0.5, max: 3, step: 0.1, default: 1, label: 'Amplitude' }
+                }
+            },
+            globe: {
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.globe.min.js',
+                description: '3D Globe with connection points',
+                params: {
+                    color: { type: 'color', default: '#ff3f81', label: 'Point Color' },
+                    backgroundColor: { type: 'color', default: '#23153c', label: 'Background Color' },
+                    size: { type: 'range', min: 0.5, max: 2, step: 0.1, default: 1, label: 'Globe Size' }
+                }
+            }
+        };
+
+        function hexToDecimal(hex) {
+            return parseInt(hex.replace('#', '0x'), 16);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function togglePanel() {
+            isPanelHidden = !isPanelHidden;
+            const panel = document.getElementById('controlsPanel');
+            const toggle = document.getElementById('togglePanel');
+            
+            if (isPanelHidden) {
+                panel.classList.add('hidden');
+                toggle.classList.add('panel-hidden');
+            } else {
+                panel.classList.remove('hidden');
+                toggle.classList.remove('panel-hidden');
+            }
+        }
+
+        function generateControls(effectName) {
+            const config = effectConfigs[effectName];
+            const container = document.getElementById('controls-content');
+            container.innerHTML = '';
+
+            const section = document.createElement('div');
+            section.className = 'control-section';
+            section.innerHTML = '<h3>PARAMETERS</h3>';
+
+            Object.entries(config.params).forEach(([key, param]) => {
+                const item = document.createElement('div');
+                item.className = 'control-item';
+
+                if (param.type === 'color') {
+                    item.innerHTML = `
+                        <label>${param.label}</label>
+                        <input type="color" id="${key}" value="${param.default}" />
+                    `;
+                } else if (param.type === 'range') {
+                    item.innerHTML = `
+                        <label>${param.label} <span class="value-display" id="${key}-value">${param.default}</span></label>
+                        <input type="range" id="${key}" min="${param.min}" max="${param.max}" step="${param.step}" value="${param.default}" />
+                    `;
+                } else if (param.type === 'checkbox') {
+                    item.innerHTML = `
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="${key}" ${param.default ? 'checked' : ''} />
+                            <label for="${key}">${param.label}</label>
+                        </div>
+                    `;
+                } else if (param.type === 'number') {
+                    item.innerHTML = `
+                        <label>${param.label}</label>
+                        <input type="number" id="${key}" min="${param.min}" max="${param.max}" step="${param.step}" value="${param.default}" />
+                    `;
+                }
+
+                section.appendChild(item);
+
+                setTimeout(() => {
+                    const input = document.getElementById(key);
+                    if (input) {
+                        input.addEventListener('input', (e) => {
+                            let value = e.target.value;
+                            
+                            if (param.type === 'color') {
+                                value = hexToDecimal(value);
+                            } else if (param.type === 'range' || param.type === 'number') {
+                                value = parseFloat(value);
+                                const display = document.getElementById(`${key}-value`);
+                                if (display) display.textContent = value;
+                            } else if (param.type === 'checkbox') {
+                                value = e.target.checked;
+                            }
+
+                            if (currentEffect) {
+                                const updateObj = {};
+                                updateObj[key] = value;
+                                currentEffect.setOptions(updateObj);
+                                currentConfig[key] = e.target.value;
+                                updateCodeOutput();
+                            }
+                        });
+                    }
+                }, 0);
+            });
+
+            container.appendChild(section);
+        }
+
+        function updateCodeOutput() {
+            const effectName = document.getElementById('effect-select').value;
+            const config = effectConfigs[effectName];
+            
+            let code = `VANTA.${effectName.toUpperCase()}({\n  el: "#your-element",\n  mouseControls: true,\n  touchControls: true,\n  gyroControls: false`;
+            
+            Object.entries(config.params).forEach(([key, param]) => {
+                const value = currentConfig[key];
+                if (value !== undefined) {
+                    if (param.type === 'color') {
+                        code += `,\n  ${key}: ${hexToDecimal(value)}`;
+                    } else if (param.type === 'checkbox') {
+                        code += `,\n  ${key}: ${value === 'true' || value === true}`;
+                    } else {
+                        code += `,\n  ${key}: ${value}`;
+                    }
+                }
+            });
+            
+            code += '\n})';
+            document.getElementById('codeOutput').textContent = code;
+        }
+
+        function copyConfig() {
+            const code = document.getElementById('codeOutput').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Configuration copiée dans le presse-papier !');
+            });
+        }
+
+        function loadEffect(effectName) {
+            showLoading();
+
+            if (currentEffect) {
+                currentEffect.destroy();
+                currentEffect = null;
+            }
+
+            if (currentScript) {
+                currentScript.remove();
+            }
+
+            currentConfig = {};
+            const config = effectConfigs[effectName];
+            
+            document.getElementById('effectTitle').textContent = effectName.toUpperCase();
+            document.getElementById('effectDescription').textContent = config.description;
+
+            const script = document.createElement('script');
+            script.src = config.url;
+            
+            script.onload = () => {
+                const vantaConfig = {
+                    el: "#vanta-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false
+                };
+
+                Object.entries(config.params).forEach(([key, param]) => {
+                    let value = param.default;
+                    if (param.type === 'color') {
+                        value = hexToDecimal(value);
+                    }
+                    vantaConfig[key] = value;
+                    currentConfig[key] = param.default;
+                });
+
+                currentEffect = VANTA[effectName.toUpperCase()](vantaConfig);
+                generateControls(effectName);
+                updateCodeOutput();
+                hideLoading();
+            };
+
+            script.onerror = () => {
+                hideLoading();
+                alert('Erreur lors du chargement de l\'effet');
+            };
+
+            currentScript = script;
+            document.head.appendChild(script);
+        }
+
+        document.getElementById('effect-select').addEventListener('change', (e) => {
+            loadEffect(e.target.value);
+        });
+
+        loadEffect('waves');
+    </script>
+</body>
+</html>

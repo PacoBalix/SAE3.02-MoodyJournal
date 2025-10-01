@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoodyJournal - Blog</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.waves.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -30,7 +30,10 @@
             }
         }
     </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Utilise Poppins comme police par défaut ; modifiez ici pour changer la police globale */
+        body { font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -56,6 +59,10 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
         }
         
+        .h3 {
+            font-family: 'Poppins', sans-serif;
+        }
+
         .vanta-canvas {
             position: fixed !important;
             top: 0;
@@ -75,8 +82,12 @@
             max-width: none;
             color: rgba(255, 255, 255, 0.9);
         }
-        .prose-enhanced h1 { 
-            @apply text-5xl font-bold mb-10 leading-tight;
+        .prose-enhanced h1 {
+            /* équivalent de: text-5xl font-bold mb-10 leading-tight */
+            font-size: 3rem; /* 48px */
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+            line-height: 1.1;
             color: rgba(255, 255, 255, 0.98);
             text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
@@ -84,28 +95,42 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .prose-enhanced h2 { 
-            @apply text-3xl font-semibold mb-8 mt-12;
+        .prose-enhanced h2 {
+            /* équivalent de: text-3xl font-semibold mb-8 mt-12 */
+            font-size: 1.875rem; /* 30px */
+            font-weight: 600;
+            margin-bottom: 2rem;
+            margin-top: 3rem;
             color: rgba(255, 255, 255, 0.95);
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             border-left: 4px solid #667eea;
             padding-left: 1rem;
         }
-        .prose-enhanced h3 { 
-            @apply text-2xl font-medium mb-6 mt-10;
+        .prose-enhanced h3 {
+            /* équivalent de: text-2xl font-medium mb-6 mt-10 */
+            font-size: 1.5rem; /* 24px */
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            margin-top: 2.5rem;
             color: rgba(255, 255, 255, 0.92);
             text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
         }
-        .prose-enhanced p { 
-            @apply leading-relaxed mb-8 text-lg;
-            color: rgba(255, 255, 255, 0.88);
+        .prose-enhanced p {
+            /* équivalent de: leading-relaxed mb-8 text-lg */
             line-height: 1.6;
+            margin-bottom: 2rem;
+            font-size: 1.125rem; /* 18px */
+            color: rgba(255, 255, 255, 0.88);
             text-align: justify;
         }
-        .prose-enhanced ul { 
-            @apply list-none mb-6 space-y-3;
+        .prose-enhanced ul {
+            /* équivalent de: list-none mb-6 space-y-3 */
+            list-style: none;
+            margin-bottom: 1.5rem;
+            padding-left: 0;
             color: rgba(255, 255, 255, 0.85);
         }
+        .prose-enhanced ul li { margin-bottom: 0.75rem; }
         .prose-enhanced ul li::before {
             content: "→";
             color: #667eea;
@@ -114,24 +139,41 @@
             width: 1em;
             margin-right: 0.5em;
         }
-        .prose-enhanced ol { 
-            @apply list-decimal list-inside mb-6 space-y-3;
+        .prose-enhanced ol {
+            /* équivalent de: list-decimal list-inside mb-6 space-y-3 */
+            list-style: decimal inside;
+            margin-bottom: 1.5rem;
             color: rgba(255, 255, 255, 0.85);
         }
-        .prose-enhanced blockquote { 
-            @apply border-l-4 border-primary pl-6 italic py-4 my-8;
+        .prose-enhanced ol li { margin-bottom: 0.75rem; }
+        .prose-enhanced blockquote {
+            /* équivalent de: border-l-4 border-primary pl-6 italic py-4 my-8 */
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            font-style: italic;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            margin: 2rem 0;
             background: rgba(102, 126, 234, 0.1);
             color: rgba(255, 255, 255, 0.9);
             border-radius: 0 8px 8px 0;
         }
-        .prose-enhanced code { 
-            @apply px-2 py-1 rounded text-sm font-mono;
+        .prose-enhanced code {
+            /* équivalent de: px-2 py-1 rounded text-sm font-mono */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
             background: rgba(0, 0, 0, 0.3);
             color: #f093fb;
             border: 1px solid rgba(240, 147, 251, 0.3);
         }
-        .prose-enhanced pre { 
-            @apply p-6 rounded-xl overflow-x-auto my-8;
+        .prose-enhanced pre {
+            /* équivalent de: p-6 rounded-xl overflow-x-auto my-8 */
+            padding: 1.5rem;
+            border-radius: 1rem;
+            overflow-x: auto;
+            margin: 2rem 0;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -141,8 +183,12 @@
             border: none;
             color: rgba(255, 255, 255, 0.9);
         }
-        .prose-enhanced a { 
-            @apply transition-all duration-300 no-underline relative inline-block;
+        .prose-enhanced a {
+            /* équivalent de: transition-all duration-300 no-underline relative inline-block */
+            transition: all 300ms ease;
+            text-decoration: none;
+            position: relative;
+            display: inline-block;
             color: #f093fb;
             font-weight: 600;
             padding: 0.25rem 0.5rem;
@@ -168,7 +214,11 @@
         }
         
         .btn-primary {
-            @apply px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform;
+            /* équivalent de: px-8 py-4 rounded-2xl font-bold transition-all duration-300 */
+            padding: 1rem 2rem; /* py-4 (1rem) px-8 (2rem) */
+            border-radius: 1rem; /* rounded-2xl */
+            font-weight: 700; /* font-bold */
+            transition: all 300ms ease; /* duration-300 + transition-all */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             color: white;
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
@@ -388,7 +438,7 @@
                     <!-- Copyright -->
                     <div class="border-t border-white/10 pt-8">
                         <p class="text-white/50 text-sm">
-                            © 2024 MoodyJournal. Tous droits réservés. Fait avec ❤️ pour votre bien-être.
+                            © 2025 MoodyJournal. Tous droits réservés. Fait avec ❤️ pour votre bien-être.
                         </p>
                     </div>
                 </div>
@@ -397,22 +447,42 @@
     </div>
 
     <script>
-        // Initialisation de Vanta.js
-        VANTA.WAVES({
-            el: "#vanta-bg",
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.0,
-            minWidth: 200.0,
-            scale: 1.0,
-            scaleMobile: 1.0,
-            color: 0x1a1a2e,
-            shininess: 30.0,
-            waveHeight: 15.0,
-            waveSpeed: 0.75,
-            zoom: 0.85
-        });
+        // Initialisation de Vanta.js avec vérification
+        function initVanta() {
+            if (typeof THREE !== 'undefined' && typeof VANTA !== 'undefined' && VANTA.WAVES) {
+                try {
+                    VANTA.WAVES({
+                        el: "#vanta-bg",
+                        mouseControls: true,
+                        touchControls: true,
+                        gyroControls: false,
+                        minHeight: 200.0,
+                        minWidth: 200.0,
+                        scale: 1.0,
+                        scaleMobile: 1.0,
+                        color: 0x207432,
+                        shininess: 30.0,
+                        waveHeight: 15.0,
+                        waveSpeed: 0.75,
+                        zoom: 0.85
+                    });
+                    console.log('✅ VANTA.WAVES initialisé avec succès');
+                } catch (error) {
+                    console.warn('⚠️ Erreur lors de l\'initialisation de VANTA.WAVES:', error);
+                }
+            } else {
+                console.warn('⚠️ Three.js ou VANTA non disponible, utilisation du background CSS');
+            }
+        }
+        
+        // Essayer d'initialiser immédiatement
+        initVanta();
+        
+        // Essayer aussi après le chargement complet
+        window.addEventListener('load', initVanta);
+        
+        // Fallback après 3 secondes
+        setTimeout(initVanta, 3000);
 
         // Animations au scroll
         const observerOptions = {

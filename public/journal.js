@@ -8,51 +8,141 @@ function info_popup() {
   }, 3000);
 }
 
-// Initialize animations and icons
-AOS.init({
-  duration: 800,
-  easing: "ease-in-out",
-  once: true,
-});
+// Initialize animations and icons avec vérification
+if (typeof AOS !== 'undefined') {
+  AOS.init({
+    duration: 800,
+    easing: "ease-in-out",
+    once: true,
+  });
+}
 
-feather.replace();
-
-VANTA.GLOBE({
-    el: "#vanta-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.00,
-    minWidth: 200.00,
-    scale: 1.00,
-    scaleMobile: 1.00,
-    color: 0x1e88e5,      // bleu
-    shininess: 50.00,
-    waveHeight: 20.00,
-    waveSpeed: 0.75,
-    zoom: 1.00
-  })
+if (typeof feather !== 'undefined') {
+  feather.replace();
+}
 
 // Set today's date as default
 document.addEventListener("DOMContentLoaded", function () {
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("journal-date").value = today;
 
-  // Initialize Vanta.js background
-  VANTA.GLOBE({
-    el: "#vanta-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.0,
-    minWidth: 200.0,
-    scale: 1.0,
-    scaleMobile: 1.0,
-    color: 0x10b981,
-    backgroundColor: 0xf0fdf4,
-    size: 0.8,
-    index: -1 /* Derrière tout le contenu */
-  });
+  // Initialize Vanta.js background avec vérification et gestion d'instance
+  // Nous gardons une référence à l'instance pour pouvoir la détruire proprement
+  window.__VANTA_INSTANCE__ = window.__VANTA_INSTANCE__ || null;
+  function initVantaBackground() {
+    // Vérifier que Three.js est chargé
+    if (typeof THREE === 'undefined') {
+      console.warn('⚠️ Three.js non chargé');
+      return false;
+    }
+
+    if (typeof VANTA === 'undefined') {
+      console.warn('⚠️ VANTA non disponible');
+      return false;
+    }
+
+    // Vérifier que TOPOLOGY est une fonction/constructeur
+    const topologyFactory = VANTA.TOPOLOGY || (VANTA.init && VANTA.init.TOPOLOGY);
+    if (!topologyFactory && typeof VANTA.TOPOLOGY !== 'function') {
+      console.warn('⚠️ VANTA.TOPOLOGY n\'est pas disponible ou n\'est pas une fonction');
+      return false;
+    }
+
+    try {
+      // Diagnostics rapides
+      try {
+        console.log('🔎 VANTA keys:', Object.keys(VANTA || {}));
+        console.log('🔎 typeof VANTA.TOPOLOGY:', typeof VANTA.TOPOLOGY);
+        console.log('🔎 THREE revision:', (typeof THREE !== 'undefined' && THREE.REVISION) ? THREE.REVISION : 'unknown');
+        // Lister les scripts chargés (utile pour détecter plusieurs three.js ou vanta inclus)
+        const scripts = Array.from(document.scripts).map(s => s.src).filter(Boolean);
+        console.log('📜 scripts loaded:', scripts);
+        console.log('🔎 three.js scripts:', scripts.filter(s => /three(\.min)?\.js/i.test(s) || s.toLowerCase().includes('three.js')));
+        console.log('🔎 vanta scripts:', scripts.filter(s => /vanta\./i.test(s)));
+        // Vérifier AMD / CommonJS presence
+        console.log('🔎 define:', typeof define, 'require:', typeof require, '🔎 module:', typeof module);
+        // Aperçu du factory si c'est une fonction
+        if (typeof VANTA.TOPOLOGY === 'function') {
+          try {
+            console.log('🔎 VANTA.TOPOLOGY (snippet):', VANTA.TOPOLOGY.toString().slice(0, 500));
+          } catch (snipErr) {
+            console.log('🔎 Unable to show snippet of VANTA.TOPOLOGY');
+          }
+        } else {
+          console.log('🔎 VANTA.TOPOLOGY value:', VANTA.TOPOLOGY);
+        }
+      } catch (dlog) {
+        // noop
+      }
+
+      // Détruire instance existante si présente
+      if (window.__VANTA_INSTANCE__ && typeof window.__VANTA_INSTANCE__.destroy === 'function') {
+        window.__VANTA_INSTANCE__.destroy();
+        window.__VANTA_INSTANCE__ = null;
+      }
+
+      // Initialiser et stocker l'instance
+      window.__VANTA_INSTANCE__ = VANTA.TOPOLOGY({
+        el: "#vanta-bg",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.0,
+        minWidth: 200.0,
+        scale: 1.0,
+        scaleMobile: 1.0,
+        color: 0x85a53b,
+        backgroundColor: 0xffffff,
+      });
+
+      console.log('✅ VANTA.TOPOLOGY initialisé dans journal.js');
+      return true;
+    } catch (error) {
+      console.warn('⚠️ Erreur VANTA.TOPOLOGY dans journal.js:', error);
+      // Tentative : recharger dynamiquement le script Vanta Topology (cache-bust)
+      try {
+        const existing = document.querySelector('script[src*="vanta.topology.min.js"]');
+        if (existing) existing.remove();
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.topology.min.js?cb=' + Date.now();
+        s.async = true;
+        s.onload = function() {
+          console.log('🔁 vanta.topology rechargé, nouvelle tentative d\'init');
+          setTimeout(initVantaBackground, 200);
+        };
+        s.onerror = function(ev) { console.warn('❌ Échec du rechargement de vanta.topology', ev); };
+        document.head.appendChild(s);
+      } catch (reloadErr) {
+        console.warn('❌ Impossible de recharger dynamiquement vanta.topology:', reloadErr);
+      }
+      // fallback: appliquer une animation CSS légère sur #vanta-bg
+      try {
+        const el = document.getElementById('vanta-bg');
+        if (el) {
+          el.style.background = 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #e0f2fe 100%)';
+          el.style.transition = 'opacity 0.6s ease';
+        }
+      } catch (e) {
+        // noop
+      }
+      return false;
+    }
+  }
+  
+  // Attendre que tout soit chargé
+  function tryInitVanta() {
+    if (typeof THREE !== 'undefined' && typeof VANTA !== 'undefined') {
+      if (!initVantaBackground()) {
+        console.log('✅ Utilisation du background CSS animé');
+      }
+    } else {
+      console.log('⏳ Attente des scripts...');
+      setTimeout(tryInitVanta, 500);
+    }
+  }
+  
+  // Essayer d'initialiser après un délai
+  setTimeout(tryInitVanta, 1000);
 
   // Save journal function
   document

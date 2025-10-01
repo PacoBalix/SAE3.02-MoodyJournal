@@ -1,6 +1,6 @@
 ---
 title: Psychologie et fonctions du cerveau humain
-date: 2024-01-10
+date: 2025-09-28
 author: Équipe MoodyJournal
 category: Psychologie
 tags: psychologie, cerveau, neurosciences, bien-être

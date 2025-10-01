@@ -1,6 +1,6 @@
 ---
 title: Git/GitHub Cheat Sheet - Gestion de Projet
-date: 2024-01-05
+date: 2025-09-27
 author: Équipe MoodyJournal
 category: Développement
 tags: git, github, développement, collaboration, versioning

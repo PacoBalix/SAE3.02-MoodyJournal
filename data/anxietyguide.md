@@ -1,6 +1,6 @@
 ---
 title: Comprendre l'anxiété : Guide complet
-date: 2024-01-15
+date: 2025-09-25
 author: Équipe MoodyJournal
 category: Bien-être mental
 tags: anxiété, gestion du stress, santé mentale
